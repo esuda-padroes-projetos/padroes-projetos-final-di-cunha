@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Veículo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/validarRegex.js') }}"></script>
+</head>
+<body>
+    <header>
+        <h1>Cadastro de Veículo</h1>
+    </header>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form action="{{ url_for('processar_cadastro_veiculo') }}" method="POST" onsubmit="return validarFormularioVeiculo()">
+            <select name="tipo" required>
+                <option value="">Selecione o tipo</option>
+                <option value="carro">Carro</option>
+                <option value="moto">Moto</option>
+                <option value="caminhao">Caminhão</option>
+            </select>
+            <input type="text" name="modelo" placeholder="Modelo (ex: Gol)" required>
+            <input type="text" id="placa" name="placa" placeholder="Placa (ex: ABC-1234)" required>
+            <button type="submit">Cadastrar Veículo</button>
+        </form>
+        <a href="{{ url_for('landing') }}">Voltar ao Painel</a>
+    </div>
+</body>
+</html>

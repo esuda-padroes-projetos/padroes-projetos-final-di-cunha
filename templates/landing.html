@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel da Oficina</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Painel de Controle - Oficina Mecânica</h1>
+    </header>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <nav>
+            <a href="{{ url_for('cadastro_usuario') }}">Cadastrar Cliente</a>
+            <a href="{{ url_for('cadastro_veiculo') }}">Cadastrar Veículo</a>
+            <a href="{{ url_for('cadastro_servico') }}">Nova Ordem de Serviço</a>
+            <a href="{{ url_for('ordens_servico') }}">Ver Ordens</a>
+            <a href="{{ url_for('index') }}">Logout</a>
+        </nav>
+    </div>
+</body>
+</html>

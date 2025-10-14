@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Ordens de Serviço</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Ordens de Serviço</h1>
+    </header>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente ID</th>
+                    <th>Veículo ID</th>
+                    <th>Serviços</th>
+                    <th>Orçamento (R$)</th>
+                    <th>Status</th>
+                    <th>Ações</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {% if ordens %}
+                    {% for ordem in ordens %}
+                        <tr>
+                            <td>{{ ordem.id }}</td>
+                            <td>{{ ordem.cliente_id }}</td>
+                            <td>{{ ordem.veiculo_id }}</td>
+                            <td>{{ ordem.servicos }}</td>
+                            <td>{{ "%.2f"|format(ordem.orcamento) }}</td>
+                            <td>{{ ordem.status }}</td>
+                            <td>
+                                {% if ordem.status != 'Finalizado' %}
+                                    <form action="{{ url_for('finalizar_ordem', ordem_id=ordem.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" onclick="return confirm('Finalizar esta ordem?')">Finalizar</button>
+                                    </form>
+                                {% else %}
+                                    <span style="color: green; font-weight: bold;">Concluída</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="7">Nenhuma ordem cadastrada ainda.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('landing') }}">Voltar ao Painel</a>
+    </div>
+</body>
+</html>

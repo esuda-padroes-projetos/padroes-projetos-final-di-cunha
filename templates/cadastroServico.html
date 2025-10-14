@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Nova Ordem de Serviço</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Nova Ordem de Serviço</h1>
+    </header>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form action="{{ url_for('processar_cadastro_ordem') }}" method="POST">
+            <label for="cliente_id">Cliente:</label>
+            <select name="cliente_id" id="cliente_id" required>
+                <option value="">Selecione um Cliente</option>
+                {% if clientes %}
+                    {% for cliente in clientes %}
+                        <option value="{{ cliente[0] }}">{{ cliente[1] }} ({{ cliente[2] }})</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="" disabled>Nenhum cliente cadastrado. Vá para "Cadastrar Cliente" primeiro!</option>
+                {% endif %}
+            </select>
+
+            <label for="veiculo_id">Veículo:</label>
+            <select name="veiculo_id" id="veiculo_id" required>
+                <option value="">Selecione um Veículo</option>
+                {% if veiculos %}
+                    {% for veiculo in veiculos %}
+                        <option value="{{ veiculo[0] }}">{{ veiculo[1] }} - {{ veiculo[2] }} (Placa: {{ veiculo[3] }})</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="" disabled>Nenhum veículo cadastrado. Vá para "Cadastrar Veículo" primeiro!</option>
+                {% endif %}
+            </select>
+
+            <label for="servicos_ids">Serviços a Realizar (selecione múltiplos com Ctrl+clique):</label>
+            <select name="servicos_ids" id="servicos_ids" multiple required>
+                <option value="">Selecione Serviços</option>
+                {% if servicos %}
+                    {% for servico in servicos %}
+                        <option value="{{ servico[0] }}">{{ servico[1] }} - R$ {{ servico[2] }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="" disabled>Nenhum serviço disponível. O sistema deve ter serviços de exemplo — recarregue o app.</option>
+                {% endif %}
+            </select>
+            <p><small>O orçamento será calculado automaticamente com base nos serviços selecionados.</small></p>
+
+            <button type="submit">Criar Ordem de Serviço</button>
+        </form>
+        <a href="{{ url_for('landing') }}">Voltar ao Painel</a>
+    </div>
+</body>
+</html>
