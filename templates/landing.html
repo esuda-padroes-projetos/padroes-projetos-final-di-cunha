@@ -4,6 +4,53 @@
     <meta charset="UTF-8">
     <title>Painel da Oficina</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .dashboard-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .dashboard-title {
+            text-align: center;
+            color: #555;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap; 
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 220px; 
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .card:hover { transform: translateY(-5px); }
+
+        .card h2 { margin: 0; color: #7f8c8d; font-size: 1.1rem; }
+        
+        .card .value { 
+            font-size: 2.2rem; 
+            font-weight: bold; 
+            color: #2c3e50; 
+            margin-top: 10px; 
+        }
+
+        .card.money .value { color: #27ae60; } 
+        .card.clients .value { color: #2980b9; } 
+        .card.vehicles .value { color: #8e44ad; }
+        .card.pending .value { color: #e67e22; }
+    </style>
 </head>
 <body>
     <header>
@@ -20,11 +67,62 @@
         
         <nav>
             <a href="{{ url_for('cadastro_usuario') }}">Cadastrar Cliente</a>
+            <a href="{{ url_for('listar_clientes') }}">Gerenciar Clientes</a>
             <a href="{{ url_for('cadastro_veiculo') }}">Cadastrar Veículo</a>
+            <a href="{{ url_for('listar_veiculos') }}">Gerenciar Veículos</a> 
+            <a href="{{ url_for('novo_servico') }}">Tipos de Serviço</a>
             <a href="{{ url_for('cadastro_servico') }}">Nova Ordem de Serviço</a>
             <a href="{{ url_for('ordens_servico') }}">Ver Ordens</a>
-            <a href="{{ url_for('index') }}">Logout</a>
         </nav>
+
+        <div class="dashboard-section">
+            <h2 class="dashboard-title">Resumo Operacional</h2>
+            
+            <div class="cards">
+                <div class="card clients">
+                    <h2>Clientes</h2>
+                    <div class="value" id="total-clientes">-</div>
+                </div>
+
+                <div class="card vehicles">
+                    <h2>Veículos</h2>
+                    <div class="value" id="total-veiculos">-</div>
+                </div>
+
+                <div class="card pending">
+                    <h2>Ordens Abertas</h2>
+                    <div class="value" id="count-aberto">-</div>
+                </div>
+
+                <div class="card money">
+                    <h2>Faturamento</h2>
+                    <div class="value" id="total-faturado">R$ -</div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        async function carregarDashboard() {
+            try {
+                const response = await fetch('/api/ordens/dashboard-data'); 
+                if (!response.ok) throw new Error('Erro na API');
+                const data = await response.json();
+
+                document.getElementById('total-clientes').innerText = data.total_clientes;
+                
+                // Atualiza Veículos
+                document.getElementById('total-veiculos').innerText = data.total_veiculos;
+
+                document.getElementById('count-aberto').innerText = data.ordens_em_aberto;
+                document.getElementById('total-faturado').innerText = 
+                    data.total_faturado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            } catch (error) {
+                console.error('Erro ao carregar dashboard:', error);
+            }
+        }
+        carregarDashboard();
+    </script>
 </body>
 </html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Cliente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header><h1>Editar Cliente #{{ cliente.id }}</h1></header>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('processar_edicao_usuario', user_id=cliente.id) }}" method="POST">
+            <label for="nome">Nome Completo:</label>
+            <input type="text" name="nome" id="nome" value="{{ cliente.nome }}" required>
+
+            <label for="email">E-mail:</label>
+            <input type="email" name="email" id="email" value="{{ cliente.email }}" required>
+
+            <label for="cpf">CPF:</label>
+            <input type="text" 
+                   name="cpf" 
+                   id="cpf"
+                   value="{{ cliente.cpf }}"
+                   maxlength="14" 
+                   required
+                   oninput="mascaraCPF(this)">
+
+            <button type="submit" style="background-color: #f39c12;">💾 Salvar Alterações</button>
+        </form>
+        
+        <a href="{{ url_for('listar_clientes') }}" class="btn-voltar">Cancelar e Voltar</a>
+    </div>
+
+    <script>
+        function mascaraCPF(i) {
+            let v = i.value;
+            
+            if(isNaN(v[v.length-1])){
+               i.value = v.substring(0, v.length-1);
+               return;
+            }
+            
+            i.setAttribute("maxlength", "14");
+            v = v.replace(/\D/g, "")
+            v = v.replace(/(\d{3})(\d)/, "$1.$2")
+            v = v.replace(/(\d{3})(\d)/, "$1.$2")
+            v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+            
+            i.value = v;
+        }
+    </script>
+</body>
+</html>

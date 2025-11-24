@@ -7,7 +7,7 @@ class SQLiteAdapter(AdapterBase):
         self.db_name = db_name
         self.conn = sqlite3.connect(db_name, check_same_thread=False)
         self.cursor = self.conn.cursor()
-        self._ensure_tables()  # Garante estrutura e insere exemplos
+        self._ensure_tables()
 
     def _ensure_tables(self):
         self._create_or_alter_usuarios()
@@ -34,7 +34,9 @@ class SQLiteAdapter(AdapterBase):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 tipo TEXT NOT NULL,
                 modelo TEXT NOT NULL,
-                placa TEXT UNIQUE NOT NULL
+                placa TEXT NOT NULL,
+                cliente_id INTEGER NOT NULL,  -- ADICIONE ESSA LINHA
+                FOREIGN KEY(cliente_id) REFERENCES usuarios(id) -- OPCIONAL: CRIA A RELAÇÃO REAL
             )
         """)
 
@@ -59,7 +61,7 @@ class SQLiteAdapter(AdapterBase):
                 FOREIGN KEY (veiculo_id) REFERENCES veiculos (id)
             )
         """)
-        # Verifica e recria se incompleta
+       
         try:
             self.cursor.execute("PRAGMA table_info(ordens)")
             columns = [row[1] for row in self.cursor.fetchall()]
@@ -86,10 +88,11 @@ class SQLiteAdapter(AdapterBase):
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS itens_ordem (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ordem_id INTEGER,
-                servico_id INTEGER,
-                FOREIGN KEY (ordem_id) REFERENCES ordens (id),
-                FOREIGN KEY (servico_id) REFERENCES servicos (id)
+                ordem_id INTEGER NOT NULL,
+                servico_id INTEGER NOT NULL,
+                status TEXT DEFAULT 'Pendente',  -- NOVA COLUNA AQUI
+                FOREIGN KEY(ordem_id) REFERENCES ordens(id),
+                FOREIGN KEY(servico_id) REFERENCES servicos(id)
             )
         """)
 
@@ -111,7 +114,6 @@ class SQLiteAdapter(AdapterBase):
         else:
             print(f"Serviços já existem no banco ({count} itens).")
 
-    # IMPLEMENTAÇÃO DOS MÉTODOS ABSTRATOS (obrigatórios para herdar de AdapterBase)
     def insert(self, table, data):
         keys = ', '.join(data.keys())
         placeholders = ', '.join(['?' for _ in data])
@@ -144,7 +146,6 @@ class SQLiteAdapter(AdapterBase):
         self.cursor.execute(f"DELETE FROM {table} WHERE id = ?", (id,))
         self.conn.commit()
 
-    # MÉTODOS EXTRAS PARA ORDEM DE SERVIÇO (não abstratos, mas úteis)
     def insert_itens_ordem(self, ordem_id, servicos_ids):
         for servico_id in servicos_ids:
             self.insert("itens_ordem", {'ordem_id': ordem_id, 'servico_id': servico_id})

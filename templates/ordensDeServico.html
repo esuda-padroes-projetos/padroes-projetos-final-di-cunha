@@ -2,13 +2,54 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Ordens de Serviço</title>
+    <title>Lista de Ordens</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .card { 
+            margin-bottom: 30px; 
+            padding-bottom: 20px;
+            position: relative;
+        }
+
+        .lista-itens { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .lista-itens td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        
+        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+        .badge-pendente { background: #f39c12; color: white; }
+        .badge-finalizado { background: #27ae60; color: white; }
+
+        .btn-acao { border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: 0.2s; }
+        .btn-finalizar { background-color: #2ecc71; color: white; }
+        .btn-finalizar:hover { background-color: #27ae60; }
+        .btn-editar { background-color: #e67e22; color: white; }
+        .btn-editar:hover { background-color: #d35400; }
+        
+        .btn-finalizar-tudo {
+            background-color: #c0392b; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px;
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .btn-finalizar-tudo:hover { background-color: #a93226; }
+        
+        .col-acao { text-align: right; width: 150px; }
+
+        .card-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Ordens de Serviço</h1>
-    </header>
+    <header><h1>Ordens de Serviço</h1></header>
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -17,46 +58,104 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Cliente ID</th>
-                    <th>Veículo ID</th>
-                    <th>Serviços</th>
-                    <th>Orçamento (R$)</th>
-                    <th>Status</th>
-                    <th>Ações</th> 
-                </tr>
-            </thead>
-            <tbody>
-                {% if ordens %}
-                    {% for ordem in ordens %}
-                        <tr>
-                            <td>{{ ordem.id }}</td>
-                            <td>{{ ordem.cliente_id }}</td>
-                            <td>{{ ordem.veiculo_id }}</td>
-                            <td>{{ ordem.servicos }}</td>
-                            <td>{{ "%.2f"|format(ordem.orcamento) }}</td>
-                            <td>{{ ordem.status }}</td>
-                            <td>
-                                {% if ordem.status != 'Finalizado' %}
-                                    <form action="{{ url_for('finalizar_ordem', ordem_id=ordem.id) }}" method="POST" style="display: inline;">
-                                        <button type="submit" onclick="return confirm('Finalizar esta ordem?')">Finalizar</button>
-                                    </form>
-                                {% else %}
-                                    <span style="color: green; font-weight: bold;">Concluída</span>
-                                {% endif %}
-                            </td>
-                        </tr>
+
+        <div class="cards">
+            {% for ordem in ordens %}
+            <div class="card" style="text-align: left;">
+                
+                <div>
+                    <h3>OS #{{ ordem.id }} - {{ ordem.veiculo_modelo }}</h3>
+                    
+                    <h4 style="margin: 8px 0; color: #2c3e50; font-size: 1.2em;">
+                        👤 {{ ordem.cliente_nome }}
+                    </h4>
+
+                    <p style="margin-top: 5px; color: #555;">Status: <strong>{{ ordem.status }}</strong></p>
+                </div>
+                
+                <h4 style="margin-top: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px;">Serviços:</h4>
+                <table class="lista-itens">
+                    {% for item in ordem.itens %}
+                    <tr>
+                        <td>{{ item.descricao }}</td>
+                        <td>
+                            {% if item.status == 'Finalizado' %}
+                                <span class="badge badge-finalizado">Concluído</span>
+                            {% else %}
+                                <span class="badge badge-pendente">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-acao">
+                            {% if item.status == 'Pendente' %}
+                                <button class="btn-acao btn-finalizar" 
+                                        onclick="alterarStatus({{ ordem.id }}, {{ item.id }}, 'Finalizado')">
+                                    ✅ Baixar
+                                </button>
+                            {% else %}
+                                <button class="btn-acao btn-editar" 
+                                        onclick="alterarStatus({{ ordem.id }}, {{ item.id }}, 'Pendente')">
+                                    ✏️ Reabrir
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% endfor %}
-                {% else %}
-                    <tr><td colspan="7">Nenhuma ordem cadastrada ainda.</td></tr>
-                {% endif %}
-            </tbody>
-        </table>
-        <a href="{{ url_for('landing') }}">Voltar ao Painel</a>
+                </table>
+
+                <div class="card-footer">
+                    <div style="font-size: 1.3em;">
+                        Total: <strong>{{ ordem.orcamento | moeda }}</strong>
+                    </div>
+
+                    {% if ordem.status != 'Finalizado' %}
+                    <button class="btn-finalizar-tudo" onclick="finalizarTudo({{ ordem.id }})">
+                        🚀 Finalizar OS Completa
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="/landing" class="btn-voltar">Voltar ao Menu</a>
     </div>
+
+    <script>
+        async function alterarStatus(ordemId, servicoId, novoStatus) {
+            let msg = novoStatus === 'Finalizado' ? "Finalizar este serviço?" : "Reabrir este serviço?";
+            if(!confirm(msg)) return;
+
+            try {
+                const response = await fetch(`/api/ordem/${ordemId}/item/${servicoId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: novoStatus })
+                });
+                const data = await response.json();
+                if (data.success) location.reload();
+                else alert("Erro: " + data.error);
+            } catch (error) { console.error(error); alert("Erro ao comunicar com servidor."); }
+        }
+
+        async function finalizarTudo(ordemId) {
+            if(!confirm("Tem certeza que deseja FINALIZAR TODA a Ordem de Serviço?")) return;
+
+            try {
+                const response = await fetch(`/api/ordem/${ordemId}/finalizar-tudo`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert("Erro: " + data.error);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao comunicar com o servidor.");
+            }
+        }
+    </script>
 </body>
 </html>

@@ -4,11 +4,51 @@
     <meta charset="UTF-8">
     <title>Nova Ordem de Serviço</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .servicos-container {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #fff;
+            margin-bottom: 15px;
+        }
+
+        .servico-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .servico-item:last-child {
+            border-bottom: none;
+        }
+
+        .servico-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .servico-item label {
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin: 0;
+        }
+
+        .preco-servico {
+            font-weight: bold;
+            color: #27ae60;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Nova Ordem de Serviço</h1>
-    </header>
+    <header><h1>Nova Ordem de Serviço</h1></header>
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -17,48 +57,76 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
+
         <form action="{{ url_for('processar_cadastro_ordem') }}" method="POST">
+            
             <label for="cliente_id">Cliente:</label>
             <select name="cliente_id" id="cliente_id" required>
-                <option value="">Selecione um Cliente</option>
-                {% if clientes %}
-                    {% for cliente in clientes %}
-                        <option value="{{ cliente[0] }}">{{ cliente[1] }} ({{ cliente[2] }})</option>
-                    {% endfor %}
-                {% else %}
-                    <option value="" disabled>Nenhum cliente cadastrado. Vá para "Cadastrar Cliente" primeiro!</option>
-                {% endif %}
+                <option value="" disabled selected>Selecione um cliente...</option>
+                {% for cliente in clientes %}
+                    <option value="{{ cliente[0] }}">{{ cliente[1] }} (CPF: {{ cliente[3] }})</option>
+                {% endfor %}
             </select>
 
             <label for="veiculo_id">Veículo:</label>
-            <select name="veiculo_id" id="veiculo_id" required>
-                <option value="">Selecione um Veículo</option>
-                {% if veiculos %}
-                    {% for veiculo in veiculos %}
-                        <option value="{{ veiculo[0] }}">{{ veiculo[1] }} - {{ veiculo[2] }} (Placa: {{ veiculo[3] }})</option>
-                    {% endfor %}
-                {% else %}
-                    <option value="" disabled>Nenhum veículo cadastrado. Vá para "Cadastrar Veículo" primeiro!</option>
-                {% endif %}
+            <select name="veiculo_id" id="veiculo_id" required disabled>
+                <option value="" disabled selected>Selecione um cliente primeiro...</option>
+                {% for veiculo in veiculos %}
+                    <option value="{{ veiculo[0] }}" data-cliente-id="{{ veiculo[4] }}">
+                        {{ veiculo[2] }} - {{ veiculo[3] }}
+                    </option>
+                {% endfor %}
             </select>
 
-            <label for="servicos_ids">Serviços a Realizar (selecione múltiplos com Ctrl+clique):</label>
-            <select name="servicos_ids" id="servicos_ids" multiple required>
-                <option value="">Selecione Serviços</option>
-                {% if servicos %}
-                    {% for servico in servicos %}
-                        <option value="{{ servico[0] }}">{{ servico[1] }} - R$ {{ servico[2] }}</option>
-                    {% endfor %}
+            <label>Selecione os Serviços:</label>
+            <div class="servicos-container">
+                {% for servico in servicos %}
+                <div class="servico-item">
+                    <input type="checkbox" 
+                           id="servico_{{ servico[0] }}" 
+                           name="servicos_ids" 
+                           value="{{ servico[0] }}">
+                    
+                    <label for="servico_{{ servico[0] }}">
+                        <span>{{ servico[1] }}</span>
+                        <span class="preco-servico">{{ servico[2] | moeda }}</span>
+                    </label>
+                </div>
                 {% else %}
-                    <option value="" disabled>Nenhum serviço disponível. O sistema deve ter serviços de exemplo — recarregue o app.</option>
-                {% endif %}
-            </select>
-            <p><small>O orçamento será calculado automaticamente com base nos serviços selecionados.</small></p>
+                    <p style="text-align: center; color: #999;">Nenhum serviço cadastrado.</p>
+                {% endfor %}
+            </div>
 
-            <button type="submit">Criar Ordem de Serviço</button>
+            <button type="submit">Criar Ordem</button>
         </form>
-        <a href="{{ url_for('landing') }}">Voltar ao Painel</a>
+        
+        <a href="/landing" class="btn-voltar">Voltar ao Menu</a>
     </div>
+
+    <script>
+        const selectCliente = document.getElementById('cliente_id');
+        const selectVeiculo = document.getElementById('veiculo_id');
+        const todasOpcoesVeiculos = Array.from(selectVeiculo.querySelectorAll('option:not([disabled])'));
+
+        selectCliente.addEventListener('change', function() {
+            const clienteIdSelecionado = this.value;
+            selectVeiculo.disabled = false;
+            selectVeiculo.value = "";
+            
+            todasOpcoesVeiculos.forEach(option => {
+                option.style.display = 'none';
+                option.hidden = true;
+                
+                if (option.getAttribute('data-cliente-id') === clienteIdSelecionado) {
+                    option.style.display = 'block';
+                    option.hidden = false;
+                }
+            });
+            
+            const defaultOption = selectVeiculo.querySelector('option[disabled]');
+            defaultOption.text = "Selecione um veículo deste cliente...";
+            defaultOption.selected = true;
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Veículo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style> select:disabled { background-color: #e9ecef; cursor: not-allowed; } </style>
+</head>
+<body>
+    <header><h1>Editar Veículo #{{ veiculo.id }}</h1></header>
+    <div class="container">
+        
+        <form action="{{ url_for('processar_edicao_veiculo', id=veiculo.id) }}" method="POST">
+            
+            <label for="cliente_id">Proprietário:</label>
+            <select name="cliente_id" id="cliente_id" required>
+                {% for cliente in clientes %}
+                    <option value="{{ cliente[0] }}" {% if cliente[0] == veiculo.cliente_id %}selected{% endif %}>
+                        {{ cliente[1] }} (CPF: {{ cliente[3] }})
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="placa">Placa:</label>
+            <input type="text" name="placa" id="placa" value="{{ veiculo.placa }}" maxlength="8" required oninput="mascaraPlaca(this)">
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ccc;">
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                Modelo Atual: <strong>{{ veiculo.tipo }} - {{ veiculo.modelo }}</strong>. <br>
+                Use os campos abaixo APENAS se quiser trocar o modelo.
+            </p>
+
+            <label for="tipo">Novo Tipo (Opcional):</label>
+            <select name="tipo" id="tipo">
+                <option value="" selected>-- Manter Atual --</option>
+                <option value="Carro">🚗 Carro</option>
+                <option value="Moto">🏍️ Moto</option>
+                <option value="Caminhão">🚛 Caminhão</option>
+            </select>
+
+            <label for="marca">Nova Marca:</label>
+            <select name="marca" id="marca" disabled>
+                <option value="" disabled selected>Selecione o Tipo...</option>
+            </select>
+
+            <label for="modelo">Novo Modelo:</label>
+            <select name="modelo" id="modelo" disabled>
+                <option value="" disabled selected>Selecione a Marca...</option>
+            </select>
+
+            <button type="submit" style="background-color: #f39c12; margin-top: 20px;">💾 Salvar Alterações</button>
+        </form>
+        
+        <a href="{{ url_for('listar_veiculos') }}" class="btn-voltar">Cancelar e Voltar</a>
+    </div>
+
+    <script>
+        function mascaraPlaca(i) {
+            let v = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+            if (v.length >= 3) v = v.replace(/^([A-Z]{3})([0-9A-Z]+)/, "$1-$2");
+            i.value = v;
+        }
+
+        const selTipo = document.getElementById('tipo');
+        const selMarca = document.getElementById('marca');
+        const selModelo = document.getElementById('modelo');
+
+        selTipo.addEventListener('change', async function() {
+            const tipo = this.value;
+            if(!tipo) return;
+
+            selMarca.innerHTML = '<option value="" disabled selected>Carregando...</option>';
+            selModelo.innerHTML = '<option value="" disabled selected>Selecione a Marca...</option>';
+            selModelo.disabled = true;
+
+            try {
+                const response = await fetch(`/api/dados-veiculos?tipo=${tipo}`);
+                const marcas = await response.json();
+                selMarca.innerHTML = '<option value="" disabled selected>-- Selecione a Marca --</option>';
+                marcas.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m; opt.text = m;
+                    selMarca.appendChild(opt);
+                });
+                selMarca.disabled = false;
+            } catch (err) { console.error(err); }
+        });
+
+        selMarca.addEventListener('change', async function() {
+            const tipo = selTipo.value;
+            const marca = this.value;
+            selModelo.innerHTML = '<option value="" disabled selected>Carregando...</option>';
+            selModelo.disabled = true;
+
+            try {
+                const response = await fetch(`/api/dados-veiculos?tipo=${tipo}&marca=${marca}`);
+                const modelos = await response.json();
+                selModelo.innerHTML = '<option value="" disabled selected>-- Selecione o Modelo --</option>';
+                modelos.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m; opt.text = m;
+                    selModelo.appendChild(opt);
+                });
+                selModelo.disabled = false;
+            } catch (err) { console.error(err); }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastrar Novo Serviço</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header><h1>Cadastrar Tipo de Serviço</h1></header>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('processar_novo_servico') }}" method="POST">
+            <label for="descricao">Nome do Serviço:</label>
+            <input type="text" name="descricao" id="descricao" placeholder="Ex: Troca de Óleo" required>
+
+            <label for="preco">Preço (R$):</label>
+            <input type="number" name="preco" id="preco" placeholder="0.00" step="0.01" required>
+
+            <button type="submit" style="background-color: #2980b9;">Salvar Serviço</button>
+        </form>
+        
+        <a href="/landing" class="btn-voltar">Voltar ao Menu</a>
+    </div>
+</body>
+</html>

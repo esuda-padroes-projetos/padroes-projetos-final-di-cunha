@@ -48,7 +48,7 @@ form button {
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #aaa;
-    box-sizing: border-box;  /* Evita overflow em inputs */
+    box-sizing: border-box;
 }
 
 form button {
@@ -63,7 +63,6 @@ form button:hover {
     background: #0055cc;
 }
 
-/* Classes para mensagens de flash (sucesso/erro) */
 .success {
     color: green;
     background: #d4edda;
@@ -111,4 +110,24 @@ form button[type="submit"] {
 
 form button[type="submit"]:hover {
     background: #218838;
+}
+
+.btn-voltar {
+    display: inline-block;
+    background-color: #95a5a6;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-voltar:hover {
+    background-color: #7f8c8d;
+    color: white;
+    transform: translateY(-2px);
 }

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Oficina</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { text-align: center; color: #333; }
+        .cards { display: flex; gap: 20px; justify-content: center; margin-top: 30px; }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 45%;
+            text-align: center;
+        }
+        .card h2 { margin: 0; color: #666; font-size: 1.2rem; }
+        .card .value { font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin-top: 10px; }
+        .card.money .value { color: #27ae60; }
+        .btn-voltar { display: block; margin-top: 30px; text-align: center; text-decoration: none; color: #3498db; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard da Oficina</h1>
+        
+        <div class="cards">
+            <div class="card">
+                <h2>Ordens em Aberto</h2>
+                <div class="value" id="count-aberto">Carregando...</div>
+            </div>
+            <div class="card money">
+                <h2>Total Faturado</h2>
+                <div class="value" id="total-faturado">---</div>
+            </div>
+        </div>
+
+        <a href="/landing" class="btn-voltar">Ir para o Menu Principal →</a>
+    </div>
+
+    <script>
+        async function carregarDashboard() {
+            try {
+                const response = await fetch('/api/ordens/dashboard-data'); 
+                
+                if (!response.ok) {
+                    throw new Error('Erro na resposta da API');
+                }
+
+                const data = await response.json();
+
+                document.getElementById('count-aberto').innerText = data.ordens_em_aberto;
+                document.getElementById('total-faturado').innerText = data.total_faturado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            } catch (error) {
+                console.error('Erro ao carregar dashboard:', error);
+                document.getElementById('count-aberto').innerText = "Erro";
+            }
+        }
+
+        carregarDashboard();
+    </script>
+</body>
+</html>
